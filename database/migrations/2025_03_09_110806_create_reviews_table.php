@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->decimal('rating');
             $table->mediumText('text');
-            $table->foreignId('listing_id')->references('id')->on('listings')->cascadeOnDelete();
-            $table->foreignId('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreignId('listing_id')->references('id')->on('listings');
+            $table->foreignId('user_id')->references('id')->on('users');
             $table->timestamps();
         });
     }

@@ -24,8 +24,8 @@ return new class extends Migration
             $table->mediumText('description')->nullable();
             $table->string('status')->nullable()->comment('draft|published');
             $table->decimal('average_reviews')->nullable();
-            $table->foreignId('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreignId('category_id')->references('id')->on('categories')->restrictOnDelete();
+            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignId('category_id')->references('id')->on('categories');
             $table->timestamps();
         });
     }
