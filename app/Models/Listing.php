@@ -14,8 +14,9 @@ class Listing extends Model
         'location',
         'address',
         'price',
-        'price_cycle',
+        'renting_duration',
         'features',
+        'images',
         'description',
         'status',
         'average_reviews',
@@ -24,6 +25,7 @@ class Listing extends Model
     ];
 
     protected $casts = [
+        'images' => 'json',
         'location' => 'array',
         'features' => 'array',
     ];
@@ -36,11 +38,6 @@ class Listing extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    public function images(): HasMany
-    {
-        return $this->hasMany(ListingImage::class);
     }
     public function discounts(): HasMany
     {

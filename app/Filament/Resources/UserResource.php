@@ -39,17 +39,25 @@ class UserResource extends Resource
                                 Forms\Components\TextInput::make('email')
                                     ->label('Email Address')
                                     ->email()
-                                    ->unique()
+                                    ->unique(ignoreRecord: true)
                                     ->disabledOn('edit')
                                     ->required()
                                     ->placeholder('Enter email address')
                                     ->columnSpan(1),
-                                Forms\Components\TextInput::make('phone_number')
-                                    ->label('Phone Number')
-                                    ->numeric()
-                                    ->disabledOn('edit')
+                                Forms\Components\TextInput::make('password')
+                                    ->password()
+                                    ->visibleOn('create')
                                     ->required()
+                                    ->minLength(8)
+                                    ->maxLength(191)
+                                    ->placeholder('Enter password')
+                                    ->helperText('Password must be at least 8 characters')
+                                    ->columnSpan(2),
+                                Forms\Components\TextInput::make('phone_number')
                                     ->placeholder('Enter Phone Number')
+                                    ->required()
+                                    ->numeric()
+                                    ->unique(ignoreRecord: true)
                                     ->columnSpan(1),
                                 Forms\Components\Select::make('role')
                                     ->options([
@@ -70,18 +78,14 @@ class UserResource extends Resource
                 Group::make()
                     ->schema([
                         // Password Section
-                        Forms\Components\Section::make('Account Credentials')
+                        Forms\Components\Section::make()
                             ->schema([
-                                Forms\Components\TextInput::make('password')
-                                    ->password()
-                                    ->disabledOn('edit')
-                                    ->required()
-                                    ->minLength(8)
-                                    ->maxLength(191)
-                                    ->placeholder('Enter password')
-                                    ->helperText('Password must be at least 8 characters')
+                                Forms\Components\FileUpload::make('image')
+                                    ->nullable()
+                                    ->image()
+                                    ->maxSize(2048)
+                                    ->acceptedFileTypes(['image/*'])
                                     ->columnSpan(2),
-
                                 Map::make('location')
                                     ->columnSpan(2)
                             ])->columns(2)
@@ -108,16 +112,8 @@ class UserResource extends Resource
                     ->badge()
                     ->searchable()
                     ->label('Role'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Created At'),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Updated At'),
+                Tables\Columns\ImageColumn::make('image')
+                    ->circular()
             ])
             ->filters([
                 SelectFilter::make('role')
@@ -125,7 +121,7 @@ class UserResource extends Resource
                         'admin' => 'Admin',
                         'user' => 'User',
                     ])
-                    ->label('Filter by Role')
+                    ->label('Role')
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->iconSize('lg')->hiddenLabel(),
