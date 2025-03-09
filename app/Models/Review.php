@@ -16,7 +16,7 @@ class Review extends Model
 
     public function listing(): BelongsTo
     {
-        return $this->belongsTo(Listings::class);
+        return $this->belongsTo(Listing::class);
     }
 
     public function user(): BelongsTo

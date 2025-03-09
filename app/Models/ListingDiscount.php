@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ListingDiscount extends Model
 {
-    protected $fillable = ['listing_id', 'percentage', 'start_date', 'end_date'];
+    protected $fillable = ['name', 'listing_id', 'percentage', 'start_date', 'end_date', 'status'];
 
     public function listing(): BelongsTo
     {

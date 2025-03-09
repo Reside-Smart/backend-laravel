@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('listing_discounts', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->decimal('percentage');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
+            $table->string('status')->default('active')->comment('inactive|active');
             $table->foreignId('listing_id')->references('id')->on('listings');
             $table->timestamps();
         });

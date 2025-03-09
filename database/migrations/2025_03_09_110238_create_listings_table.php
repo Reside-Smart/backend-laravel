@@ -19,7 +19,8 @@ return new class extends Migration
             $table->json('location')->nullable();
             $table->mediumText('address')->nullable();
             $table->decimal('price')->nullable();
-            $table->string('price_cycle')->nullable()->comment('monthly|yearly|permanent');
+            $table->integer('renting_duration')->nullable()->comment('in months');
+            $table->json('images')->nullable();
             $table->json('features')->nullable();
             $table->mediumText('description')->nullable();
             $table->string('status')->nullable()->comment('draft|published');
