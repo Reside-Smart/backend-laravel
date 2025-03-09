@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('type')->comment('sell|rent');
             $table->decimal('amount_paid');
             $table->string('payment_status')->comment('unpaid|paid');
-            $table->string('payment_method');
+            $table->string('payment_method')->comment('cash|credit_card');
             $table->string('payment_date')->nullable();
             $table->string('check_in_date');
             $table->string('check_out_date')->nullable();

@@ -16,8 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('type')->comment('sell|rent')->nullable();
-            $table->string('longitude')->nullable();
-            $table->string('latitude')->nullable();
+            $table->json('location')->nullable();
             $table->mediumText('address')->nullable();
             $table->decimal('price')->nullable();
             $table->string('price_cycle')->nullable()->comment('monthly|yearly|permanent');

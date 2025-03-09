@@ -20,8 +20,7 @@ return new class extends Migration
             $table->string('role')->comment('user|admin')->default('user');
             $table->string('phone_number')->unique()->nullable();
             $table->mediumText('address')->nullable();
-            $table->string('longitude')->nullable();
-            $table->string('latitude')->nullable();
+            $table->json('location')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

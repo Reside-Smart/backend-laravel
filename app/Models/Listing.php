@@ -11,8 +11,7 @@ class Listing extends Model
     protected $fillable = [
         'name',
         'type',
-        'longitude',
-        'latitude',
+        'location',
         'address',
         'price',
         'price_cycle',
@@ -22,6 +21,11 @@ class Listing extends Model
         'average_reviews',
         'user_id',
         'category_id'
+    ];
+
+    protected $casts = [
+        'location' => 'array',
+        'features' => 'array',
     ];
 
     public function user(): BelongsTo
