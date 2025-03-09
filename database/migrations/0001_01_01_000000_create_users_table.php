@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('role')->comment('user|admin')->default('user');
             $table->string('phone_number')->unique()->nullable();
+            $table->string('image')->nullable();
             $table->mediumText('address')->nullable();
             $table->json('location')->nullable();
             $table->rememberToken();
