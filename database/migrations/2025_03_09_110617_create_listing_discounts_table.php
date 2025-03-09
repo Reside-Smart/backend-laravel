@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('percentage');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->foreignId('listing_id')->references('id')->on('listings')->cascadeOnDelete();
+            $table->foreignId('listing_id')->references('id')->on('listings');
             $table->timestamps();
         });
     }

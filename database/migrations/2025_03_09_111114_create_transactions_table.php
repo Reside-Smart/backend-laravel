@@ -20,9 +20,9 @@ return new class extends Migration
             $table->string('payment_date')->nullable();
             $table->string('check_in_date');
             $table->string('check_out_date')->nullable();
-            $table->foreignId('listing_id')->references('id')->on('listings')->restrictOnDelete();
-            $table->foreignId('buyer_id')->references('id')->on('users')->restrictOnDelete();
-            $table->foreignId('seller_id')->references('id')->on('users')->restrictOnDelete();
+            $table->foreignId('listing_id')->references('id')->on('listings');
+            $table->foreignId('buyer_id')->references('id')->on('users');
+            $table->foreignId('seller_id')->references('id')->on('users');
             $table->timestamps();
         });
     }
