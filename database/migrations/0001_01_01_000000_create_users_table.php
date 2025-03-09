@@ -18,10 +18,10 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role')->comment('user|admin')->default('user');
-            $table->string('phone_number')->unique();
-            $table->mediumText('address');
-            $table->string('longitude');
-            $table->string('latitude');
+            $table->string('phone_number')->unique()->nullable();
+            $table->mediumText('address')->nullable();
+            $table->string('longitude')->nullable();
+            $table->string('latitude')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
