@@ -18,7 +18,10 @@ class CustomResetPassword extends BaseResetPassword
         return (new MailMessage)
             ->subject('Your Custom Password Reset Link') // Customize the subject
             ->view('emails.reset_password', [  // Use a custom view
-                'actionUrl' => url(config('app.url') . route('password.reset', $this->token, false)),
+                'actionUrl' => url(config('app.url') . route('password.reset.get', [
+                    'token' => $this->token,
+                    'email' => $notifiable->email,
+                ], false)),
                 'user' => $notifiable,
             ]);
     }

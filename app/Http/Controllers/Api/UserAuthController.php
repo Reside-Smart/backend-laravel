@@ -17,18 +17,12 @@ class UserAuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone_number' => 'required|string|numeric|unique:users',
             'password' => 'required|string|min:6',
         ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'All fields are Required',
-                'error' => $validator->messages(),
-            ], 422);
-        }
 
         $otp = rand(100000, 999999);
 
@@ -73,17 +67,11 @@ class UserAuthController extends Controller
 
     public function completeProfile(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'address' => 'required|string',
             'location' => 'required|json',
         ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'All fields are Required',
-                'error' => $validator->messages(),
-            ], 422);
-        }
 
         $user = Auth::user();
 
@@ -105,16 +93,10 @@ class UserAuthController extends Controller
 
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email|exists:users,email',
             'password' => 'required',
         ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'All fields are Required',
-                'error' => $validator->messages(),
-            ], 422);
-        }
 
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
@@ -143,17 +125,13 @@ class UserAuthController extends Controller
 
     public function forgetPassword(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|email|exists:users,email'
         ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'All fields are Required',
-                'error' => $validator->messages(),
-            ], 422);
-        }
 
-        $status = Password::sendResetLink($request->only('email'));
+        $status = Password::sendResetLink([
+            'email' => $request->only('email')
+        ]);
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json([
@@ -165,17 +143,12 @@ class UserAuthController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'token' => 'required',
             'email' => 'required|email',
             'password' => 'required|string|min:6|confirmed',
         ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'All fields are Required',
-                'error' => $validator->messages(),
-            ], 422);
-        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
@@ -187,9 +160,30 @@ class UserAuthController extends Controller
         );
 
         if ($status == Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password has been successfully reset.'], 200);
+            return back()->with('message', "Password reset done successfully!");
         }
 
-        return response()->json(['error' => 'Invalid token or email.'], 400);
+        return back()->with('message', "Invalid email or token!");
+    }
+
+    public function me()
+    {
+        return response()->json(
+            [
+                'user' => Auth::user()
+            ],
+            200
+        );
+    }
+
+    public function showResetPasswordForm(Request $request)
+    {
+        return view(
+            'auth.forgetPasswordLink',
+            [
+                'token' => $request->query('token'),
+                'email' => $request->query('email')
+            ]
+        );
     }
 }
