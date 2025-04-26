@@ -14,11 +14,11 @@ class Listing extends Model
         'location',
         'address',
         'price',
-        'renting_duration',
         'features',
         'images',
         'description',
         'status',
+        'is_available',
         'average_reviews',
         'user_id',
         'category_id'
@@ -47,5 +47,9 @@ class Listing extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+    public function rentalOptions(): HasMany
+    {
+        return $this->hasMany(RentalOption::class);
     }
 }
