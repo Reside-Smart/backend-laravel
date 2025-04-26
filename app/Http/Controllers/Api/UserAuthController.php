@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EmailVerificationMail;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 class UserAuthController extends Controller
 {
+    use ApiResponseTrait;
     public function register(Request $request)
     {
         $request->validate([
@@ -77,7 +79,7 @@ class UserAuthController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('profile_images', 'public');
+            $imagePath = $this->storeImage($request->file('image'));
             $user->image = $imagePath;
         }
 
@@ -113,14 +115,16 @@ class UserAuthController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        $request->user()->tokens()->delete();
+        auth()->user()->tokens()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully',
         ], 200);
     }
+
+
 
 
     public function forgetPassword(Request $request)
@@ -185,5 +189,59 @@ class UserAuthController extends Controller
                 'email' => $request->query('email')
             ]
         );
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // Check if current password matches
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 400);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+
+        return response()->json(['message' => 'Password updated successfully.'], 200);
+    }
+
+    public function editProfile(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|unique:users,phone_number,' . $user->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'address' => 'nullable|string',
+            'location' => 'nullable|json',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        // Handle Image Upload
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('profile_images', 'public');
+            $user->image = $imagePath;
+        }
+        $user->update([
+            'name' => $request->name ?? $user->name,
+            'phone_number' => $request->phone_number ?? $user->phone_number,
+            'email' => $request->email ?? $user->email,
+            'address' => $request->address ?? $user->address,
+            'location' => $request->location ? json_decode($request->location, true) : $user->location,
+        ]);
+
+        return response()->json([
+            'message' => 'Profile updated successfully!',
+            'user' => $user
+        ], 200);
     }
 }
