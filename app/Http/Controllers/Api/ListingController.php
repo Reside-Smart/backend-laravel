@@ -95,7 +95,7 @@ class ListingController extends Controller
 
         if (is_array($rentalOptions) && count($rentalOptions)) {
             foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
+                $listing->rentalOptions()->create([
                     'duration' => $option['duration'],
                     'unit' => $option['unit'],
                     'price' => $option['price'],
@@ -163,7 +163,7 @@ class ListingController extends Controller
 
         if (is_array($rentalOptions) && count($rentalOptions)) {
             foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
+                $listing->rentalOptions()->create([
                     'duration' => $option['duration'],
                     'unit' => $option['unit'],
                     'price' => $option['price'],
@@ -230,23 +230,13 @@ class ListingController extends Controller
             'category_id' => $request->category_id ?? $listing->category_id,
         ]);
 
-        $rentalOptions = json_decode($request->rental_options, true);
 
-        if (is_array($rentalOptions) && count($rentalOptions)) {
-            foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
-                    'duration' => $option['duration'],
-                    'unit' => $option['unit'],
-                    'price' => $option['price'],
-                ]);
-            }
-        }
-        $listing->rentalOption()->delete();
+        $listing->rentalOptions()->delete();
 
         $rentalOptions = json_decode($request->rental_options, true);
         if (is_array($rentalOptions) && count($rentalOptions)) {
             foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
+                $listing->rentalOptions()->create([
                     'duration' => $option['duration'],
                     'unit' => $option['unit'],
                     'price' => $option['price'],
@@ -306,23 +296,13 @@ class ListingController extends Controller
             'category_id' => $request->category_id ?? $listing->category_id,
         ]);
 
-        $rentalOptions = json_decode($request->rental_options, true);
 
-        if (is_array($rentalOptions) && count($rentalOptions)) {
-            foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
-                    'duration' => $option['duration'],
-                    'unit' => $option['unit'],
-                    'price' => $option['price'],
-                ]);
-            }
-        }
-        $listing->rentalOption()->delete();
+        $listing->rentalOptions()->delete();
 
         $rentalOptions = json_decode($request->rental_options, true);
         if (is_array($rentalOptions) && count($rentalOptions)) {
             foreach ($rentalOptions as $option) {
-                $listing->rentalOption()->create([
+                $listing->rentalOptions()->create([
                     'duration' => $option['duration'],
                     'unit' => $option['unit'],
                     'price' => $option['price'],
