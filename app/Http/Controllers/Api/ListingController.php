@@ -42,6 +42,37 @@ class ListingController extends Controller
         ], 200);
     }
 
+    public function getNearbyLocations(Request $request)
+    {
+        // Eager load rentalOptions relationship
+        $listings = Listing::with(['rentalOptions'])
+            ->withCount([
+                // this will add an `is_favorite` integer 0/1 column
+                'favoritedBy as is_favorite' => function ($q) {
+                    $q->where('user_id', Auth::id());
+                },
+            ])
+            ->where('status', 'published')
+            ->limit(6)
+            ->get();
+
+        // Map over listings and attach rental options if the type is 'rent'
+        $listings = $listings->map(function ($listing) {
+            if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
+                $listing->rental_options = $listing->rentalOptions; // Attach rental options for rent listings
+            } else {
+                $listing->rental_options = null; // Set to null if not a rent listing or no rental options
+            }
+            return $listing;
+        });
+
+        // Return the listings as JSON
+        return response()->json([
+            'message' => 'Listings retrieved successfully',
+            'listings' => $listings
+        ], 200);
+    }
+
 
     public function saveAsDraft(Request $request)
     {
@@ -343,6 +374,45 @@ class ListingController extends Controller
         $listing->delete();
         return response()->json([
             'message' => 'Listing deleted successfully',
+        ], 200);
+    }
+
+    public function search(Request $request)
+    {
+        // 1) Validate incoming parameters
+        $params = $request->validate([
+            'search'       => 'sometimes|string|max:255',
+            'category_id'  => 'sometimes|integer|exists:categories,id',
+        ]);
+
+        // 2) Build the base query
+        $query = Listing::withCount([
+                // this will add an `is_favorite` integer 0/1 column
+                'favoritedBy as is_favorite' => function ($q) {
+                    $q->where('user_id', Auth::id());
+                },
+            ])
+            ->where('status', 'published');
+
+        // 3) Apply text search if provided
+        if (! empty($params['search'])) {
+            $term = $params['search'];
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'LIKE', "%{$term}%")
+                    ->orWhere('description', 'LIKE', "%{$term}%");
+            });
+        }
+
+        // 4) Filter by category if provided
+        if (! empty($params['category_id'])) {
+            $query->where('category_id', $params['category_id']);
+        }
+
+        // 5) Execute and return results
+        $listings = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'listings' => $listings,
         ], 200);
     }
 }

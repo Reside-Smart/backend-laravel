@@ -28,6 +28,7 @@ class Listing extends Model
         'images' => 'json',
         'location' => 'array',
         'features' => 'array',
+        'is_favorite' => 'boolean'
     ];
 
     public function user(): BelongsTo
@@ -51,5 +52,15 @@ class Listing extends Model
     public function rentalOptions(): HasMany
     {
         return $this->hasMany(RentalOption::class);
+    }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'favorites',
+            'listing_id',
+            'user_id'
+        )->withTimestamps();
     }
 }
