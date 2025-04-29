@@ -59,4 +59,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new CustomResetPassword($token));
     }
+
+    public function favorites()
+    {
+        return $this->belongsToMany(
+            Listing::class,
+            'favorites',
+            'user_id',
+            'listing_id'
+        )->withTimestamps();
+    }
 }
