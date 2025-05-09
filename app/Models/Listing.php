@@ -63,4 +63,9 @@ class Listing extends Model
             'user_id'
         )->withTimestamps();
     }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }
