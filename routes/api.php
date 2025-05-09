@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ListingDiscountController;
+use App\Http\Controllers\Api\RentalOptionsController;
+
 
 Route::post('/register', [UserAuthController::class, 'register']);
 Route::post('/login', [UserAuthController::class, 'login']);
@@ -20,8 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/listings-draft', [ListingController::class, 'saveAsDraft']);
     Route::post('/listings-published', [ListingController::class, 'saveAsPublished']);
-    Route::put('/listings-update-draft/{id}', [ListingController::class, 'updateAsDraft']);
-    Route::put('/listings-update-published/{id}', [ListingController::class, 'updateAsPublish']);
+    Route::post('/listings-update-draft/{id}', [ListingController::class, 'updateAsDraft']);
+    Route::post('/listings-update-published/{id}', [ListingController::class, 'updateAsPublish']);
     Route::get('/listings/search', [ListingController::class, 'search']);
 
     Route::get('user/listings', [ListingController::class, 'userListings']);
@@ -37,6 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'getUserFavorites']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{listing}', [FavoriteController::class, 'destroy']);
+
+    Route::delete('/deleteImage/{listing}', [ListingController::class, 'deleteListingImage']);
+
+    Route::post('/cancel-rental-option/{rentalOption}', [RentalOptionsController::class, 'cancelRentalOption']);
+    Route::post('/update-rental-options/{rentalOption}', [RentalOptionsController::class, 'updateRentalOption']);
+    Route::post('/add-rental-option', [RentalOptionsController::class, 'addRentalOption']);
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])
