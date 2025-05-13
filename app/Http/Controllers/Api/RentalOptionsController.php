@@ -60,4 +60,25 @@ class RentalOptionsController extends Controller
             'data' => $rentalOption,
         ]);
     }
+
+    public function getByListing($listingId)
+    {
+
+        $listing = Listing::findOrFail($listingId);
+
+        if ($listing->type != 'rent') {
+            return response()->json([
+                'data' => []
+            ]);
+        }
+
+        $options = RentalOption::where('listing_id', $listingId)
+            ->where('is_cancelled', 0)
+            ->select('id', 'duration', 'unit', 'price')
+            ->get();
+
+        return response()->json([
+            'data' => $options
+        ]);
+    }
 }

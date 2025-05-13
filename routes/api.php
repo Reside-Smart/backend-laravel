@@ -35,6 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/nearby-estates', [ListingController::class, 'getNearbyLocations']);
 
     Route::get('/listing-discounts', [ListingDiscountController::class, 'getAllListingDiscounts']);
+    Route::get('/user-listing-discounts', [ListingDiscountController::class, 'userListingDiscounts']);
+    Route::post('/add-discounts', [ListingDiscountController::class, 'addDiscount']);
+    Route::delete('/delete-discount/{discount}', [ListingDiscountController::class, 'deleteDiscount']);
+
 
     Route::get('/favorites', [FavoriteController::class, 'getUserFavorites']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
@@ -45,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cancel-rental-option/{rentalOption}', [RentalOptionsController::class, 'cancelRentalOption']);
     Route::post('/update-rental-options/{rentalOption}', [RentalOptionsController::class, 'updateRentalOption']);
     Route::post('/add-rental-option', [RentalOptionsController::class, 'addRentalOption']);
+    Route::get('/listing-rental-options/{listing}', [RentalOptionsController::class, 'getByListing']);
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])
