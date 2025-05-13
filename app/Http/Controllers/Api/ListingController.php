@@ -17,27 +17,27 @@ class ListingController extends Controller
     use ApiResponseTrait;
     public function userListings(Request $request)
     {
-        // Eager load rentalOptions relationship
-        $listings = Listing::with(['rentalOptions']) // Corrected to eager load rentalOptions
-            ->where('user_id', Auth::id()) // Filter listings by user_id
+
+        $listings = Listing::with(['rentalOptions'])
+            ->where('user_id', Auth::id())
             ->get();
 
-        // If status filter is applied, filter the listings by status (draft or published)
+
         if ($request->has('status') && in_array($request->status, ['draft', 'published'])) {
             $listings = $listings->where('status', $request->status)->values();
         }
 
-        // Map over listings and attach rental options if the type is 'rent'
+
         $listings = $listings->map(function ($listing) {
             if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
-                $listing->rental_options = $listing->rentalOptions; // Attach rental options for rent listings
+                $listing->rental_options = $listing->rentalOptions;
             } else {
-                $listing->rental_options = null; // Set to null if not a rent listing or no rental options
+                $listing->rental_options = null;
             }
             return $listing;
         });
 
-        // Return the listings as JSON
+
         return response()->json([
             'message' => 'Listings retrieved successfully',
             'listings' => $listings
@@ -46,10 +46,9 @@ class ListingController extends Controller
 
     public function getNearbyLocations(Request $request)
     {
-        // Eager load rentalOptions relationship
+
         $listings = Listing::with(['rentalOptions'])
             ->withCount([
-                // this will add an `is_favorite` integer 0/1 column
                 'favoritedBy as is_favorite' => function ($q) {
                     $q->where('user_id', Auth::id());
                 },
@@ -58,17 +57,17 @@ class ListingController extends Controller
             ->limit(6)
             ->get();
 
-        // Map over listings and attach rental options if the type is 'rent'
+
         $listings = $listings->map(function ($listing) {
             if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
-                $listing->rental_options = $listing->rentalOptions; // Attach rental options for rent listings
+                $listing->rental_options = $listing->rentalOptions;
             } else {
-                $listing->rental_options = null; // Set to null if not a rent listing or no rental options
+                $listing->rental_options = null;
             }
             return $listing;
         });
 
-        // Return the listings as JSON
+
         return response()->json([
             'message' => 'Listings retrieved successfully',
             'listings' => $listings
@@ -123,7 +122,7 @@ class ListingController extends Controller
             'category_id' => $request->category_id,
 
         ]);
-        //handle rental options
+
         $rentalOptions = json_decode($request->rental_options, true);
 
         if (is_array($rentalOptions) && count($rentalOptions)) {
