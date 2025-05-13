@@ -11,6 +11,7 @@ class RentalOption extends Model
         'duration',
         'unit',
         'price',
+        'is_cancelled',
     ];
 
     public function listing()

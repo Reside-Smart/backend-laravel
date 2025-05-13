@@ -10,32 +10,34 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+use function Psy\debug;
+
 class ListingController extends Controller
 {
     use ApiResponseTrait;
     public function userListings(Request $request)
     {
-        // Eager load rentalOptions relationship
-        $listings = Listing::with(['rentalOptions']) // Corrected to eager load rentalOptions
-            ->where('user_id', Auth::id()) // Filter listings by user_id
+
+        $listings = Listing::with(['rentalOptions'])
+            ->where('user_id', Auth::id())
             ->get();
 
-        // If status filter is applied, filter the listings by status (draft or published)
+
         if ($request->has('status') && in_array($request->status, ['draft', 'published'])) {
             $listings = $listings->where('status', $request->status)->values();
         }
 
-        // Map over listings and attach rental options if the type is 'rent'
+
         $listings = $listings->map(function ($listing) {
             if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
-                $listing->rental_options = $listing->rentalOptions; // Attach rental options for rent listings
+                $listing->rental_options = $listing->rentalOptions;
             } else {
-                $listing->rental_options = null; // Set to null if not a rent listing or no rental options
+                $listing->rental_options = null;
             }
             return $listing;
         });
 
-        // Return the listings as JSON
+
         return response()->json([
             'message' => 'Listings retrieved successfully',
             'listings' => $listings
@@ -44,10 +46,9 @@ class ListingController extends Controller
 
     public function getNearbyLocations(Request $request)
     {
-        // Eager load rentalOptions relationship
+
         $listings = Listing::with(['rentalOptions'])
             ->withCount([
-                // this will add an `is_favorite` integer 0/1 column
                 'favoritedBy as is_favorite' => function ($q) {
                     $q->where('user_id', Auth::id());
                 },
@@ -56,17 +57,17 @@ class ListingController extends Controller
             ->limit(6)
             ->get();
 
-        // Map over listings and attach rental options if the type is 'rent'
+
         $listings = $listings->map(function ($listing) {
             if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
-                $listing->rental_options = $listing->rentalOptions; // Attach rental options for rent listings
+                $listing->rental_options = $listing->rentalOptions;
             } else {
-                $listing->rental_options = null; // Set to null if not a rent listing or no rental options
+                $listing->rental_options = null;
             }
             return $listing;
         });
 
-        // Return the listings as JSON
+
         return response()->json([
             'message' => 'Listings retrieved successfully',
             'listings' => $listings
@@ -121,7 +122,7 @@ class ListingController extends Controller
             'category_id' => $request->category_id,
 
         ]);
-        //handle rental options
+
         $rentalOptions = json_decode($request->rental_options, true);
 
         if (is_array($rentalOptions) && count($rentalOptions)) {
@@ -210,11 +211,15 @@ class ListingController extends Controller
 
     public function showSingleListing(Listing $listing)
     {
+        $listing->load(['rentalOptions', 'category', 'user']);
+
         return response()->json([
             'message' => 'Listing retrieved successfully',
             'listing' => $listing
         ], 200);
     }
+
+
 
     public function updateAsDraft(Request $request, string $id)
     {
@@ -233,10 +238,19 @@ class ListingController extends Controller
             'rental_options' => 'nullable|json',
         ]);
         $listing = Listing::findOrFail($id);
+
+        if ($request->filled('type') && $request->type !== $listing->type) {
+            if ($listing->transactions()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot change type because this listing has transactions.',
+                ], 422);
+            }
+        }
         $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
 
-        $imagePaths = [];
+        $imagePaths = $listing->images ?? [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 try {
@@ -247,12 +261,18 @@ class ListingController extends Controller
                 }
             }
         }
+        $finalType = $request->type ?? $listing->type;
+        $finalPrice = $finalType === 'rent' ? null : ($request->price ?? $listing->price);
+
+        if ($finalType === 'sell') {
+            $listing->rentalOptions()->delete();
+        }
         $listing->update([
             'name' => $request->name ?? $listing->name,
-            'type' => $request->type ?? $listing->type,
+            'type' => $finalType,
             'location' => $location ?? $listing->location,
             'address' => $request->address ?? $listing->address,
-            'price' => $request->price ?? $listing->price,
+            'price' => $finalPrice,
             'images' => $imagePaths,
             'features' => $features ?? $listing->features,
             'description' => $request->description ?? $listing->description,
@@ -261,24 +281,11 @@ class ListingController extends Controller
             'category_id' => $request->category_id ?? $listing->category_id,
         ]);
 
-
-        $listing->rentalOptions()->delete();
-
-        $rentalOptions = json_decode($request->rental_options, true);
-        if (is_array($rentalOptions) && count($rentalOptions)) {
-            foreach ($rentalOptions as $option) {
-                $listing->rentalOptions()->create([
-                    'duration' => $option['duration'],
-                    'unit' => $option['unit'],
-                    'price' => $option['price'],
-                ]);
-            }
-        }
         return response()->json([
+            'success' => true,
             'message' => 'Listing updated successfully',
-            'listing' => $listing,
-            'rental_options' => $rentalOptions,
-        ], 201);
+            'listing' => $request->all(),
+        ], 200);
     }
 
     public function updateAsPublish(Request $request, string $id)
@@ -289,8 +296,8 @@ class ListingController extends Controller
             'location' => 'nullable|json',
             'address' => 'required|string',
             'price' => 'nullable|numeric|min:0',
-            'images' => 'required|array',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'features' => 'required|json',
             'description' => 'required|string',
             'is_available' => 'nullable|boolean',
@@ -299,10 +306,19 @@ class ListingController extends Controller
 
         ]);
         $listing = Listing::findOrFail($id);
+
+        if ($request->filled('type') && $request->type !== $listing->type) {
+            if ($listing->transactions()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot change type because this listing has transactions.',
+                ], 422);
+            }
+        }
         $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
 
-        $imagePaths = [];
+        $imagePaths = $listing->images ?? [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 try {
@@ -313,39 +329,33 @@ class ListingController extends Controller
                 }
             }
         }
+        $finalType = $request->type ?? $listing->type;
+        $finalPrice = $finalType === 'rent' ? null : ($request->price ?? $listing->price);
+
+        if ($finalType === 'sell' && $listing->transactions()->exists()) {
+            $listing->rentalOptions()->delete();
+        }
         $listing->update([
             'name' => $request->name ?? $listing->name,
-            'type' => $request->type ?? $listing->type,
+            'type' => $finalType,
             'location' => $location ?? $listing->location,
             'address' => $request->address ?? $listing->address,
-            'price' => $request->price ?? $listing->price,
+            'price' => $finalPrice,
             'images' => $imagePaths,
             'features' => $features ?? $listing->features,
             'description' => $request->description ?? $listing->description,
-            'status' => 'draft',
+            'status' => 'published',
             'is_available' => $request->is_available ?? $listing->is_available,
             'category_id' => $request->category_id ?? $listing->category_id,
         ]);
 
-
-        $listing->rentalOptions()->delete();
-
-        $rentalOptions = json_decode($request->rental_options, true);
-        if (is_array($rentalOptions) && count($rentalOptions)) {
-            foreach ($rentalOptions as $option) {
-                $listing->rentalOptions()->create([
-                    'duration' => $option['duration'],
-                    'unit' => $option['unit'],
-                    'price' => $option['price'],
-                ]);
-            }
-        }
         return response()->json([
             'message' => 'Listing updated successfully',
             'listing' => $listing,
-            'rental_options' => $rentalOptions,
+
         ], 201);
     }
+
     public function destroy(Listing $listing)
     {
         foreach ($listing->images as $image) {
@@ -367,11 +377,11 @@ class ListingController extends Controller
 
         // 2) Build the base query
         $query = Listing::withCount([
-                // this will add an `is_favorite` integer 0/1 column
-                'favoritedBy as is_favorite' => function ($q) {
-                    $q->where('user_id', Auth::id());
-                },
-            ])
+            // this will add an `is_favorite` integer 0/1 column
+            'favoritedBy as is_favorite' => function ($q) {
+                $q->where('user_id', Auth::id());
+            },
+        ])
             ->where('status', 'published');
 
         // 3) Apply text search if provided
@@ -393,6 +403,29 @@ class ListingController extends Controller
 
         return response()->json([
             'listings' => $listings,
+        ], 200);
+    }
+
+    public function deleteListingImage(Request $request, Listing $listing)
+    {
+        if (count($listing->images) <= 1 && $listing->status == 'published') {
+            return response()->json([
+                'message' => 'At least one image is required for published listings.',
+            ], 400);
+        }
+        foreach ($listing->images as $image) {
+            if ($image == $request->url) {
+                // dd($image, $request->url);
+                $this->deleteImage($image);
+
+                $listing->update([
+                    'images' => array_values(array_filter($listing->images, fn($img) => $img !== $request->url))
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Image deleted successfully',
         ], 200);
     }
 }

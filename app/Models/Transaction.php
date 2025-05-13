@@ -17,7 +17,8 @@ class Transaction extends Model
         'check_out_date',
         'listing_id',
         'buyer_id',
-        'seller_id'
+        'seller_id',
+        'discount_id',
     ];
 
     public function listing(): BelongsTo
@@ -33,5 +34,9 @@ class Transaction extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+    public function listingDiscount(): BelongsTo
+    {
+        return $this->belongsTo(ListingDiscount::class, 'discount_id');
     }
 }
