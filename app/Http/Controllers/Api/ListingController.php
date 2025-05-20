@@ -44,22 +44,25 @@ class ListingController extends Controller
         ], 200);
     }
 
+
     public function getNearbyLocations(Request $request)
     {
-
-        $listings = Listing::with(['rentalOptions'])
+        $listings = Listing::with(['rentalOptions', 'transactions'])
             ->withCount([
                 'favoritedBy as is_favorite' => function ($q) {
                     $q->where('user_id', Auth::id());
                 },
             ])
             ->where('status', 'published')
+            ->where(function ($query) {
+                $query->where('type', '!=', 'sell')
+                    ->orWhereDoesntHave('transactions');
+            })
             ->limit(6)
             ->get();
 
-
         $listings = $listings->map(function ($listing) {
-            if ($listing->type == 'rent' && $listing->rentalOptions->isNotEmpty()) {
+            if ($listing->type === 'rent' && $listing->rentalOptions->isNotEmpty()) {
                 $listing->rental_options = $listing->rentalOptions;
             } else {
                 $listing->rental_options = null;
@@ -67,12 +70,10 @@ class ListingController extends Controller
             return $listing;
         });
 
-
-        return response()->json([
-            'message' => 'Listings retrieved successfully',
-            'listings' => $listings
-        ], 200);
+        return response()->json($listings);
     }
+
+
 
 
     public function saveAsDraft(Request $request)
@@ -211,7 +212,7 @@ class ListingController extends Controller
 
     public function showSingleListing(Listing $listing)
     {
-        $listing->load(['rentalOptions', 'category', 'user']);
+        $listing->load(['rentalOptions', 'category', 'user', 'discounts']);
 
         return response()->json([
             'message' => 'Listing retrieved successfully',
@@ -358,53 +359,61 @@ class ListingController extends Controller
 
     public function destroy(Listing $listing)
     {
+        if ($listing->transactions()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete listing. It has related transactions.',
+            ], 400);
+        }
+
         foreach ($listing->images as $image) {
             $this->deleteImage($image);
         }
+
         $listing->delete();
+
         return response()->json([
             'message' => 'Listing deleted successfully',
         ], 200);
     }
 
+
     public function search(Request $request)
     {
-        // 1) Validate incoming parameters
         $params = $request->validate([
-            'search'       => 'sometimes|string|max:255',
-            'category_id'  => 'sometimes|integer|exists:categories,id',
+            'search'      => 'sometimes|string|max:255',
+            'category_id' => 'sometimes|integer|exists:categories,id',
         ]);
 
-        // 2) Build the base query
         $query = Listing::withCount([
-            // this will add an `is_favorite` integer 0/1 column
             'favoritedBy as is_favorite' => function ($q) {
                 $q->where('user_id', Auth::id());
             },
         ])
-            ->where('status', 'published');
+            ->where('status', 'published')
+            ->where(function ($q) {
+                $q->where('type', '!=', 'sell')
+                    ->orWhereDoesntHave('transactions');
+            });
 
-        // 3) Apply text search if provided
-        if (! empty($params['search'])) {
+        if (!empty($params['search'])) {
             $term = $params['search'];
             $query->where(function ($q) use ($term) {
-                $q->where('name', 'LIKE', "%{$term}%")
-                    ->orWhere('description', 'LIKE', "%{$term}%");
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('description', 'like', "%{$term}%");
             });
         }
 
-        // 4) Filter by category if provided
-        if (! empty($params['category_id'])) {
+        if (!empty($params['category_id'])) {
             $query->where('category_id', $params['category_id']);
         }
 
-        // 5) Execute and return results
         $listings = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'listings' => $listings,
         ], 200);
     }
+
 
     public function deleteListingImage(Request $request, Listing $listing)
     {

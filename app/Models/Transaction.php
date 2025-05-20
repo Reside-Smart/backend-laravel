@@ -8,22 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Transaction extends Model
 {
     protected $fillable = [
-        'type',
+        'transaction_type',
+        'total_price',
         'amount_paid',
         'payment_status',
         'payment_method',
-        'payment_date',
         'check_in_date',
         'check_out_date',
         'listing_id',
         'buyer_id',
         'seller_id',
         'discount_id',
+        'rental_option_id',
     ];
 
     public function listing(): BelongsTo
     {
-        return $this->belongsTo(Listing::class);
+        return $this->belongsTo(Listing::class, 'listing_id');
     }
 
     public function buyer(): BelongsTo
@@ -38,5 +39,9 @@ class Transaction extends Model
     public function listingDiscount(): BelongsTo
     {
         return $this->belongsTo(ListingDiscount::class, 'discount_id');
+    }
+    public function rentalOption(): BelongsTo
+    {
+        return $this->belongsTo(RentalOption::class);
     }
 }

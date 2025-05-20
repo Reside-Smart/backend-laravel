@@ -4,9 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserAuthController;
 use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ListingDiscountController;
 use App\Http\Controllers\Api\RentalOptionsController;
+use App\Http\Controllers\Api\ReviewsController;
+use App\Http\Controllers\Api\TransactionController;
 
 
 Route::post('/register', [UserAuthController::class, 'register']);
@@ -25,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/listings-update-draft/{id}', [ListingController::class, 'updateAsDraft']);
     Route::post('/listings-update-published/{id}', [ListingController::class, 'updateAsPublish']);
     Route::get('/listings/search', [ListingController::class, 'search']);
+    Route::delete('/delete-listing/{listing}', [ListingController::class, 'destroy']);
+
 
     Route::get('user/listings', [ListingController::class, 'userListings']);
     Route::delete('listings-delete/{listing}', [ListingController::class, 'destroy']);
@@ -39,7 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/add-discounts', [ListingDiscountController::class, 'addDiscount']);
     Route::delete('/delete-discount/{discount}', [ListingDiscountController::class, 'deleteDiscount']);
 
-
     Route::get('/favorites', [FavoriteController::class, 'getUserFavorites']);
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{listing}', [FavoriteController::class, 'destroy']);
@@ -50,6 +54,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update-rental-options/{rentalOption}', [RentalOptionsController::class, 'updateRentalOption']);
     Route::post('/add-rental-option', [RentalOptionsController::class, 'addRentalOption']);
     Route::get('/listing-rental-options/{listing}', [RentalOptionsController::class, 'getByListing']);
+
+    Route::post('/add-transaction', [TransactionController::class, 'createTransaction']);
+    Route::get('/booked-dates/{listingId}', [TransactionController::class, 'getBookedDates']);
+    Route::get('/transactions', [TransactionController::class, 'getTransactions']);
+    Route::get('/single-transaction/{transaction}', [TransactionController::class, 'getSingleTransaction']);
+    Route::post('/mark-as-paid/{transaction}', [TransactionController::class, 'markAsPaid']);
+
+    Route::post('/ratings', [RatingController::class, 'store']);
+    Route::get('/show-ratings/{listingId}', [RatingController::class, 'showRatedBefore']);
+    Route::get('/show-all-ratings/{listingId}', [RatingController::class, 'getRatingsByListing']);
+    Route::post('/reviews', [ReviewsController::class, 'store']);
+    Route::get('/user-reviews/{listingId}', [ReviewsController::class, 'userReviews']);
+    Route::get('/get-reviews/{listingId}', [ReviewsController::class, 'getReviews']);
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])
