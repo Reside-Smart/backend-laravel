@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserAuthController::class, 'me']);
     Route::put('/user/change-password', [UserAuthController::class, 'changePassword']);
     Route::post('/user/edit-profile', [UserAuthController::class, 'editProfile']);
+    Route::get('/dashboard-analytics', [UserAuthController::class, 'dashboardAnalytics']);
 
     Route::post('/listings-draft', [ListingController::class, 'saveAsDraft']);
     Route::post('/listings-published', [ListingController::class, 'saveAsPublished']);
@@ -29,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/listings-update-published/{id}', [ListingController::class, 'updateAsPublish']);
     Route::get('/listings/search', [ListingController::class, 'search']);
     Route::delete('/delete-listing/{listing}', [ListingController::class, 'destroy']);
+    Route::get('listings/filter', [ListingController::class, 'filter']);
 
 
     Route::get('user/listings', [ListingController::class, 'userListings']);
@@ -67,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewsController::class, 'store']);
     Route::get('/user-reviews/{listingId}', [ReviewsController::class, 'userReviews']);
     Route::get('/get-reviews/{listingId}', [ReviewsController::class, 'getReviews']);
+    Route::put('/edit-reviews/{id}', [ReviewsController::class, 'update']);
+    Route::delete('/delete-reviews/{id}', [ReviewsController::class, 'destroy']);
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])
