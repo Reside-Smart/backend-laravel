@@ -376,7 +376,6 @@ class ListingController extends Controller
         ], 200);
     }
 
-
     public function search(Request $request)
     {
         $params = $request->validate([
@@ -414,7 +413,6 @@ class ListingController extends Controller
         ], 200);
     }
 
-
     public function deleteListingImage(Request $request, Listing $listing)
     {
         if (count($listing->images) <= 1 && $listing->status == 'published') {
@@ -435,6 +433,62 @@ class ListingController extends Controller
 
         return response()->json([
             'message' => 'Image deleted successfully',
+        ], 200);
+    }
+
+
+    public function filter(Request $request)
+    {
+        $categoryIds = $request->input('category_ids');
+
+        if (is_string($categoryIds)) {
+            $categoryIds = explode(',', $categoryIds);
+        } elseif (!is_array($categoryIds)) {
+            $categoryIds = [];
+        }
+
+        $request->merge(['category_ids' => $categoryIds]);
+
+        $params = $request->validate([
+            'type'           => 'sometimes|in:sell,rent',
+            'min_price'      => 'sometimes|numeric|min:0',
+            'max_price'      => 'sometimes|numeric|min:0',
+            'search'         => 'sometimes|string',
+            'category_ids'   => 'sometimes|array',
+            'category_ids.*' => 'exists:categories,id',
+        ]);
+
+        $query = Listing::with(['rentalOptions'])
+            ->where('status', 'published');
+
+        if (!empty($params['type'])) {
+            $query->where('type', $params['type']);
+        }
+
+        if (isset($params['min_price'])) {
+            $query->where('price', '>=', $params['min_price']);
+        }
+
+        if (isset($params['max_price'])) {
+            $query->where('price', '<=', $params['max_price']);
+        }
+
+        if (!empty($params['category_ids'])) {
+            $query->whereIn('category_id', $params['category_ids']);
+        }
+
+        if (!empty($params['search'])) {
+            $query->where(function ($q) use ($params) {
+                $q->where('name', 'like', '%' . $params['search'] . '%')
+                    ->orWhere('description', 'like', '%' . $params['search'] . '%');
+            });
+        }
+
+        $listings = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'message'  => 'Filtered listings retrieved',
+            'listings' => $listings,
         ], 200);
     }
 }
