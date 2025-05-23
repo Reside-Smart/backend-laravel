@@ -10,6 +10,7 @@ use App\Http\Controllers\ListingDiscountController;
 use App\Http\Controllers\Api\RentalOptionsController;
 use App\Http\Controllers\Api\ReviewsController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\DashboardController;
 
 
 Route::post('/register', [UserAuthController::class, 'register']);
@@ -22,7 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserAuthController::class, 'me']);
     Route::put('/user/change-password', [UserAuthController::class, 'changePassword']);
     Route::post('/user/edit-profile', [UserAuthController::class, 'editProfile']);
-    Route::get('/dashboard-analytics', [UserAuthController::class, 'dashboardAnalytics']);
 
     Route::post('/listings-draft', [ListingController::class, 'saveAsDraft']);
     Route::post('/listings-published', [ListingController::class, 'saveAsPublished']);
@@ -71,6 +71,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/get-reviews/{listingId}', [ReviewsController::class, 'getReviews']);
     Route::put('/edit-reviews/{id}', [ReviewsController::class, 'update']);
     Route::delete('/delete-reviews/{id}', [ReviewsController::class, 'destroy']);
+
+    // Dashboard analytics endpoints
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/overview', [DashboardController::class, 'userOverview']);
+        Route::get('/revenue', [DashboardController::class, 'revenueOverTime']);
+        Route::get('/listing-performance', [DashboardController::class, 'listingPerformance']);
+        Route::get('/activity', [DashboardController::class, 'activityBreakdown']);
+        Route::get('/categories', [DashboardController::class, 'categoryDistribution']);
+        Route::get('/transactions', [DashboardController::class, 'transactionAnalysis']);
+        Route::get('/spending', [DashboardController::class, 'spendingAnalysis']);
+        Route::get('/rental-analytics', [DashboardController::class, 'rentalPerformance']);
+        Route::get('/reviews', [DashboardController::class, 'reviewAnalytics']);
+        Route::get('/discounts', [DashboardController::class, 'discountPerformance']);
+    });
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])

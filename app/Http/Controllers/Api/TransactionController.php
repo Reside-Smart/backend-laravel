@@ -20,12 +20,13 @@ class TransactionController extends Controller
             'payment_method' => 'required|string|in:cash,stripe',
             'payment_date' => 'nullable|date',
             'check_in_date' => 'nullable|date',
-            'check_out_date' => 'nullable|date',
+            'check_out_date' => 'nullable|date|after_or_equal:check_in_date',
             'listing_id' => 'required|exists:listings,id',
             'buyer_id' => 'required|exists:users,id',
             'seller_id' => 'required|exists:users,id',
             'discount_id' => 'nullable|exists:listing_discounts,id',
             'rental_option_id' => 'nullable|exists:rental_options,id',
+            'quantity' => 'nullable|integer',
         ]);
 
 
@@ -46,6 +47,22 @@ class TransactionController extends Controller
                     'message' => 'The listing is not available for the selected date.',
                 ], 409);
             }
+        }
+
+        if (isset($validated['rental_option_id'])) {
+            $rentalOption = \App\Models\RentalOption::findOrFail($validated['rental_option_id']);
+            $quantity = $validated['quantity'] ?? 1;
+
+            $totalPrice = $rentalOption->price * $quantity;
+
+            if (isset($validated['discount_id'])) {
+                $discount = \App\Models\ListingDiscount::findOrFail($validated['discount_id']);
+                $discountAmount = ($totalPrice * $discount->percentage) / 100;
+                $totalPrice -= $discountAmount;
+            }
+
+            $validated['total_price'] = $totalPrice;
+            $validated['amount_paid'] = $totalPrice;
         }
 
         $transaction = Transaction::create($validated);
@@ -83,7 +100,7 @@ class TransactionController extends Controller
     {
         $userId = Auth::id();
 
-        $transactions = Transaction::with(['listing', 'rentalOption'])
+        $transactions = Transaction::with(['listing.rentalOptions', 'rentalOption'])
             ->where('buyer_id', $userId)
             ->orWhere('seller_id', $userId)
             ->get();

@@ -18,6 +18,7 @@ class RentalOption extends Model
     {
         return $this->belongsTo(Listing::class);
     }
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
