@@ -49,6 +49,10 @@ class Listing extends Model
     {
         return $this->hasMany(Review::class);
     }
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
     public function rentalOptions(): HasMany
     {
         return $this->hasMany(RentalOption::class);
@@ -67,5 +71,10 @@ class Listing extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+    public function updateAverageRating()
+    {
+        $average = $this->ratings()->whereNotNull('rating')->avg('rating');
+        $this->update(['average_reviews' => round($average, 1)]);
     }
 }

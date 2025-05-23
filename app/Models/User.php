@@ -69,4 +69,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'listing_id'
         )->withTimestamps();
     }
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }
