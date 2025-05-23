@@ -249,45 +249,4 @@ class UserAuthController extends Controller
             'user' => $user
         ], 200);
     }
-
-    public function dashboardAnalytics()
-    {
-        $user = Auth::user();
-
-        $totalListings = Listing::where('user_id', $user->id)->count();
-
-        $rentListings = Listing::where('user_id', $user->id)
-            ->where('type', 'rent') // assuming 'type' column contains 'rent' or 'sell'
-            ->count();
-
-        $sellListings = Listing::where('user_id', $user->id)
-            ->where('type', 'sell')
-            ->count();
-
-        $totalTransactions = Transaction::where('seller_id', $user->id)->count();
-
-        $totalRevenue = Transaction::where('seller_id', $user->id)
-            ->where('payment_status', 'paid')
-            ->sum('amount_paid');
-
-        $averageRating = Rating::whereIn('listing_id', function ($query) use ($user) {
-            $query->select('id')
-                ->from('listings')
-                ->where('user_id', $user->id);
-        })->avg('rating');
-
-        $totalReviews = Review::whereHas('listing', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->count();
-
-        return response()->json([
-            'total_listings' => $totalListings,
-            'rent_listings' => $rentListings,
-            'sell_listings' => $sellListings,
-            'total_transactions' => $totalTransactions,
-            'total_revenue' => $totalRevenue,
-            'average_rating' => round($averageRating ?? 0, 1),
-            'total_reviews' => $totalReviews,
-        ]);
-    }
 }
