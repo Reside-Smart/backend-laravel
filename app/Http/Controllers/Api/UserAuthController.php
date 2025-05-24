@@ -40,12 +40,10 @@ class UserAuthController extends Controller
             'password' => Hash::make($request->password),
             'email_verification_code' => $otp,
         ]);
-        $token = $user->createToken('auth_token')->plainTextToken;
         Mail::to($user->email)->send(new EmailVerificationMail($otp));
         return response()->json([
-            'message' => 'User created successfully.Verify your email with code sent',
+            'message' => 'User created successfully. Verify your email with code sent',
             'user' => $user,
-            'token' => $token,
         ], 200);
     }
 
@@ -69,7 +67,13 @@ class UserAuthController extends Controller
         $user->email_verification_code = null; // Remove OTP after verification
         $user->save();
 
-        return response()->json(['message' => 'Email verified successfully.']);
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
     }
 
     public function completeProfile(Request $request)
@@ -113,14 +117,20 @@ class UserAuthController extends Controller
             ], 401);
         }
 
-        if (Auth::user()->email_verified_at === null) {
+        $user = Auth::user();
+        if ($user->email_verified_at === null) {
+            $otp = rand(100000, 999999);
+
+            Mail::to($request->email)->send(new EmailVerificationMail($otp));
+
+            $user->email_verification_code = $otp;
+            $user->save();
             return response()->json([
                 'verified' => false,
-                'message' => 'Please verify your email before logging in.'
+                'message' => 'Please verify your email before logging in. A new email has been sent with the verification code.',
             ], 403);
         }
 
-        $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'message' => 'User loggedin successfully',
