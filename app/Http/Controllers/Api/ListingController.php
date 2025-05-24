@@ -81,7 +81,8 @@ class ListingController extends Controller
         $request->validate([
             'name' => 'nullable|string|max:255',
             'type' => 'nullable|in:sell,rent',
-            'location' => 'nullable',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
             'images' => 'nullable|array',
@@ -93,7 +94,6 @@ class ListingController extends Controller
             'rental_options' => 'nullable|json',
         ]);
 
-        $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
         $rentalOptions = json_decode($request->rental_options, true);
 
@@ -143,7 +143,8 @@ class ListingController extends Controller
             'user_id' => Auth::id(),
             'name' => $request->name,
             'type' => $request->type,
-            'location' => $location,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'address' => $request->address,
             'price' => $request->price,
             'images' => $imagePaths,
@@ -179,7 +180,8 @@ class ListingController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:sell,rent',
-            'location' => 'nullable|json',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'required|string',
             'price' => 'nullable|numeric|min:0',
             'images' => 'required|array',
@@ -191,7 +193,6 @@ class ListingController extends Controller
             'rental_options' => 'nullable|json',
         ]);
 
-        $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
         $rentalOptions = json_decode($request->rental_options, true);
 
@@ -242,7 +243,8 @@ class ListingController extends Controller
             'user_id' => Auth::id(),
             'name' => $request->name,
             'type' => $request->type,
-            'location' => $location,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'address' => $request->address,
             'price' => $request->price,
             'images' => $imagePaths,
@@ -288,7 +290,8 @@ class ListingController extends Controller
         $request->validate([
             'name' => 'nullable|string|max:255',
             'type' => 'nullable|in:sell,rent',
-            'location' => 'nullable',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
             'images' => 'nullable|array',
@@ -309,7 +312,6 @@ class ListingController extends Controller
                 ], 422);
             }
         }
-        $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
 
         $imagePaths = $listing->images ?? [];
@@ -332,7 +334,8 @@ class ListingController extends Controller
         $listing->update([
             'name' => $request->name ?? $listing->name,
             'type' => $finalType,
-            'location' => $location ?? $listing->location,
+            'latitude' => $request->latitude ?? $listing->latitude,
+            'longitude' => $request->longitude ?? $listing->longitude,
             'address' => $request->address ?? $listing->address,
             'price' => $finalPrice,
             'images' => $imagePaths,
@@ -355,7 +358,8 @@ class ListingController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:sell,rent',
-            'location' => 'nullable|json',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'required|string',
             'price' => 'nullable|numeric|min:0',
             'images' => 'nullable|array',
@@ -377,7 +381,6 @@ class ListingController extends Controller
                 ], 422);
             }
         }
-        $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
 
         $imagePaths = $listing->images ?? [];
@@ -400,7 +403,8 @@ class ListingController extends Controller
         $listing->update([
             'name' => $request->name ?? $listing->name,
             'type' => $finalType,
-            'location' => $location ?? $listing->location,
+            'latitude' => $request->latitude ?? $listing->latitude,
+            'longitude' => $request->longitude ?? $listing->longitude,
             'address' => $request->address ?? $listing->address,
             'price' => $finalPrice,
             'images' => $imagePaths,

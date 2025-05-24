@@ -29,7 +29,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'image',
         'phone_number',
         'address',
-        'location',
+        'latitude',
+        'longitude',
     ];
 
     /**
@@ -52,7 +53,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'location' => 'array'
         ];
     }
     public function sendPasswordResetNotification($token)

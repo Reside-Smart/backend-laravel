@@ -11,7 +11,6 @@ class Listing extends Model
     protected $fillable = [
         'name',
         'type',
-        'location',
         'address',
         'price',
         'features',
@@ -21,12 +20,13 @@ class Listing extends Model
         'is_available',
         'average_reviews',
         'user_id',
-        'category_id'
+        'category_id',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
         'images' => 'json',
-        'location' => 'array',
         'features' => 'array',
         'is_favorite' => 'boolean'
     ];

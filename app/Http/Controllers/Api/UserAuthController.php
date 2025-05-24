@@ -77,7 +77,8 @@ class UserAuthController extends Controller
         $request->validate([
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'address' => 'required|string',
-            'location' => 'required|json',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
         ]);
 
         $user = Auth::user();
@@ -89,7 +90,8 @@ class UserAuthController extends Controller
         }
 
         $user->address = $request->address;
-        $user->location = json_decode($request->location, true);
+        $user->latitude = $request->latitude;
+        $user->longitude = $request->longitude;
         $user->save();
 
         return response()->json([
@@ -226,7 +228,8 @@ class UserAuthController extends Controller
             'phone_number' => 'nullable|string|unique:users,phone_number,' . $user->id,
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'address' => 'nullable|string',
-            'location' => 'nullable|json',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -241,7 +244,8 @@ class UserAuthController extends Controller
             'phone_number' => $request->phone_number ?? $user->phone_number,
             'email' => $request->email ?? $user->email,
             'address' => $request->address ?? $user->address,
-            'location' => $request->location ? json_decode($request->location, true) : $user->location,
+            'latitude' => $request->latitude ?? $user->latitude,
+            'longitude' => $request->longitude ?? $user->longitude,
         ]);
 
         return response()->json([
