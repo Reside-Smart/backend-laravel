@@ -95,6 +95,38 @@ class ListingController extends Controller
 
         $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
+        $rentalOptions = json_decode($request->rental_options, true);
+
+        // Validate rental options when type is rent
+        if ($request->type === 'rent' && is_array($rentalOptions) && count($rentalOptions) > 0) {
+            // Group rental options by unit
+            $optionsByUnit = [];
+            foreach ($rentalOptions as $option) {
+                $unit = $option['unit'];
+                if (!isset($optionsByUnit[$unit])) {
+                    $optionsByUnit[$unit] = [];
+                }
+                $optionsByUnit[$unit][] = $option;
+            }
+
+            // Check if each unit has at least one option with duration=1
+            foreach ($optionsByUnit as $unit => $options) {
+                $hasDurationOne = false;
+                foreach ($options as $option) {
+                    if ($option['duration'] == 1) {
+                        $hasDurationOne = true;
+                        break;
+                    }
+                }
+
+                if (!$hasDurationOne) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Each unit type must have at least one rental option with duration of 1. Missing for {$unit}.",
+                    ], 400);
+                }
+            }
+        }
 
         $imagePaths = [];
         if ($request->hasFile('images')) {
@@ -123,8 +155,6 @@ class ListingController extends Controller
             'category_id' => $request->category_id,
 
         ]);
-
-        $rentalOptions = json_decode($request->rental_options, true);
 
         if (is_array($rentalOptions) && count($rentalOptions)) {
             foreach ($rentalOptions as $option) {
@@ -159,11 +189,42 @@ class ListingController extends Controller
             'is_available' => 'nullable|boolean',
             'category_id' => 'required|exists:categories,id',
             'rental_options' => 'nullable|json',
-
         ]);
 
         $location = json_decode($request->location, true);
         $features = $request->features ? json_decode($request->features, true) : null;
+        $rentalOptions = json_decode($request->rental_options, true);
+
+        // Validate rental options when type is rent
+        if ($request->type === 'rent' && is_array($rentalOptions) && count($rentalOptions) > 0) {
+            // Group rental options by unit
+            $optionsByUnit = [];
+            foreach ($rentalOptions as $option) {
+                $unit = $option['unit'];
+                if (!isset($optionsByUnit[$unit])) {
+                    $optionsByUnit[$unit] = [];
+                }
+                $optionsByUnit[$unit][] = $option;
+            }
+
+            // Check if each unit has at least one option with duration=1
+            foreach ($optionsByUnit as $unit => $options) {
+                $hasDurationOne = false;
+                foreach ($options as $option) {
+                    if ($option['duration'] == 1) {
+                        $hasDurationOne = true;
+                        break;
+                    }
+                }
+
+                if (!$hasDurationOne) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Each unit type must have at least one rental option with duration of 1. Missing for {$unit}.",
+                    ], 400);
+                }
+            }
+        }
 
         $imagePaths = [];
         if ($request->hasFile('images')) {
@@ -456,6 +517,8 @@ class ListingController extends Controller
             'search'         => 'sometimes|string',
             'category_ids'   => 'sometimes|array',
             'category_ids.*' => 'exists:categories,id',
+            'unit'           => 'sometimes|in:Day,Week,Month,Year', // Optional unit filter for rental options
+            'duration'       => 'sometimes|integer|min:1',          // Optional duration filter
         ]);
 
         $query = Listing::with(['rentalOptions'])
@@ -465,12 +528,51 @@ class ListingController extends Controller
             $query->where('type', $params['type']);
         }
 
-        if (isset($params['min_price'])) {
-            $query->where('price', '>=', $params['min_price']);
-        }
+        // Price filtering logic that handles both types
+        if (isset($params['min_price']) || isset($params['max_price'])) {
+            $query->where(function ($q) use ($params) {
+                // For "sell" type listings, filter by the direct price
+                $q->where(function ($sellQuery) use ($params) {
+                    $sellQuery->where('type', 'sell');
 
-        if (isset($params['max_price'])) {
-            $query->where('price', '<=', $params['max_price']);
+                    if (isset($params['min_price'])) {
+                        $sellQuery->where('price', '>=', $params['min_price']);
+                    }
+
+                    if (isset($params['max_price'])) {
+                        $sellQuery->where('price', '<=', $params['max_price']);
+                    }
+                });
+
+                // For "rent" type listings, filter by rental options prices
+                $q->orWhere(function ($rentQuery) use ($params) {
+                    $rentQuery->where('type', 'rent');
+
+                    // Filter by rental option prices
+                    $rentQuery->whereHas('rentalOptions', function ($optionQuery) use ($params) {
+                        // Apply unit and duration filters if provided
+                        if (!empty($params['unit'])) {
+                            $optionQuery->where('unit', $params['unit']);
+                        }
+
+                        if (!empty($params['duration'])) {
+                            $optionQuery->where('duration', $params['duration']);
+                        } else {
+                            // Default to duration=1 if no specific duration requested
+                            $optionQuery->where('duration', 1);
+                        }
+
+                        // Apply price range filters to rental options
+                        if (isset($params['min_price'])) {
+                            $optionQuery->where('price', '>=', $params['min_price']);
+                        }
+
+                        if (isset($params['max_price'])) {
+                            $optionQuery->where('price', '<=', $params['max_price']);
+                        }
+                    });
+                });
+            });
         }
 
         if (!empty($params['category_ids'])) {

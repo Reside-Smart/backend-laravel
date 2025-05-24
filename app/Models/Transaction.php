@@ -20,6 +20,7 @@ class Transaction extends Model
         'seller_id',
         'discount_id',
         'rental_option_id',
+        'quantity',
     ];
 
     public function listing(): BelongsTo
