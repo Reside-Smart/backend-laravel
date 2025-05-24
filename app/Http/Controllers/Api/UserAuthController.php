@@ -113,6 +113,13 @@ class UserAuthController extends Controller
             ], 401);
         }
 
+        if (Auth::user()->email_verified_at === null) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Please verify your email before logging in.'
+            ], 403);
+        }
+
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
