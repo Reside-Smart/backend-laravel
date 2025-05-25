@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/change-password', [UserAuthController::class, 'changePassword']);
     Route::post('/user/edit-profile', [UserAuthController::class, 'editProfile']);
 
+
     Route::post('/listings-draft', [ListingController::class, 'saveAsDraft']);
     Route::post('/listings-published', [ListingController::class, 'saveAsPublished']);
     Route::post('/listings-update-draft/{id}', [ListingController::class, 'updateAsDraft']);
@@ -31,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/listings/search', [ListingController::class, 'search']);
     Route::delete('/delete-listing/{listing}', [ListingController::class, 'destroy']);
     Route::get('listings/filter', [ListingController::class, 'filter']);
+    Route::get('/top-locations', [ListingController::class, 'getTopLocations']);
+    Route::get('/top-agents', [ListingController::class, 'getTopAgents']);
+
 
 
     Route::get('user/listings', [ListingController::class, 'userListings']);
