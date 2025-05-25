@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use App\Models\User;
+
 
 use function Psy\debug;
 
@@ -58,7 +62,7 @@ class ListingController extends Controller
                 $query->where('type', '!=', 'sell')
                     ->orWhereDoesntHave('transactions');
             })
-            ->limit(6)
+            ->limit(10)
             ->get();
 
         $listings = $listings->map(function ($listing) {
@@ -72,7 +76,6 @@ class ListingController extends Controller
 
         return response()->json($listings);
     }
-
 
 
 
@@ -596,5 +599,80 @@ class ListingController extends Controller
             'message'  => 'Filtered listings retrieved',
             'listings' => $listings,
         ], 200);
+    }
+
+    public function getLocationName($latitude, $longitude)
+    {
+        $apiKey = config('services.google_maps.key');
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$apiKey";
+
+        $response = Http::get($url);
+        $data = $response->json();
+
+        if (!empty($data['results'][0])) {
+            $addressComponents = $data['results'][0]['address_components'];
+
+            $city = null;
+            $country = null;
+
+            foreach ($addressComponents as $component) {
+                if (in_array('locality', $component['types'])) {
+                    $city = $component['long_name'];
+                }
+                if (in_array('country', $component['types'])) {
+                    $country = $component['long_name'];
+                }
+            }
+
+            if ($city && $country) {
+                return "$city, $country";
+            }
+
+            return $data['results'][0]['formatted_address'];
+        }
+
+        return null;
+    }
+
+
+    public function getTopLocations(Request $request)
+    {
+        // Step 1: Group listings by latitude & longitude to find top 10 locations
+        $topCoordinates = DB::table('listings')
+            ->select('latitude', 'longitude', DB::raw('COUNT(*) as listings_count'))
+            ->where('status', 'published')
+            ->groupBy('latitude', 'longitude')
+            ->orderByDesc('listings_count')
+            ->limit(10)
+            ->get();
+
+        // Step 2: Add location name via reverse geocoding
+        $results = $topCoordinates->map(function ($location) {
+            $location->location_name = $this->getLocationName($location->latitude, $location->longitude);
+            return $location;
+        });
+
+        return response()->json($results);
+    }
+
+
+    public function getTopAgents()
+    {
+        $topAgents = User::select(
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.phone_number',
+            DB::raw('COUNT(listings.id) as listings_count'),
+            DB::raw('AVG(listings.average_reviews) as avg_review')
+        )
+            ->join('listings', 'listings.user_id', '=', 'users.id')
+            ->where('listings.status', 'published')
+            ->groupBy('users.id', 'users.name', 'users.email', 'users.phone_number')
+            ->orderByDesc('listings_count')
+            ->limit(10)
+            ->get();
+
+        return response()->json($topAgents);
     }
 }
