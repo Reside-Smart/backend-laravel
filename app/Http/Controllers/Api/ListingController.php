@@ -451,7 +451,7 @@ class ListingController extends Controller
             'category_id' => 'sometimes|integer|exists:categories,id',
         ]);
 
-        $query = Listing::withCount([
+        $query = Listing::with(['category', 'rentalOptions', 'discounts'])->withCount([
             'favoritedBy as is_favorite' => function ($q) {
                 $q->where('user_id', Auth::id());
             },
