@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ReviewResource\Pages;
 
 use App\Filament\Resources\ReviewResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListReviews extends ListRecords
@@ -13,7 +12,7 @@ class ListReviews extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Actions\CreateAction::make(),
+            // No create action for read-only
         ];
     }
 }

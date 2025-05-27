@@ -3,10 +3,9 @@
 namespace App\Filament\Resources\ListingDiscountResource\Pages;
 
 use App\Filament\Resources\ListingDiscountResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use Filament\Resources\Pages\ViewRecord;
 
-class CreateListingDiscount extends CreateRecord
+class ViewListingDiscount extends ViewRecord
 {
     protected static string $resource = ListingDiscountResource::class;
 }

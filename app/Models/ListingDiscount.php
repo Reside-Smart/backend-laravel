@@ -18,4 +18,8 @@ class ListingDiscount extends Model
     {
         return $this->hasMany(Transaction::class, 'discount_id');
     }
+    public function rentalOption(): BelongsTo
+    {
+        return $this->belongsTo(RentalOption::class);
+    }
 }
