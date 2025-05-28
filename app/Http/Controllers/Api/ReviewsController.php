@@ -25,6 +25,10 @@ class ReviewsController extends Controller
             'listing_id' => $request->listing_id,
         ]);
 
+        $review->load(['user', 'listing']);
+        // dispatch event to send notification
+        event(new \App\Events\ReviewCreated($review));
+
         return response()->json([
             'status' => true,
             'message' => 'Review saved successfully',

@@ -77,4 +77,13 @@ class Listing extends Model
         $average = $this->ratings()->whereNotNull('rating')->avg('rating');
         $this->update(['average_reviews' => round($average, 1)]);
     }
+    public function favoriteUsers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'favorites',
+            'listing_id',
+            'user_id'
+        )->withTimestamps();
+    }
 }

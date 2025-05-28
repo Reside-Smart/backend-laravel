@@ -89,6 +89,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reviews', [DashboardController::class, 'reviewAnalytics']);
         Route::get('/discounts', [DashboardController::class, 'discountPerformance']);
     });
+
+    // Device Token Management
+    Route::post('/device/token', [App\Http\Controllers\Api\DeviceTokenController::class, 'store']);
+    Route::delete('/device/token', [App\Http\Controllers\Api\DeviceTokenController::class, 'destroy']);
+    Route::get('/device/tokens', [App\Http\Controllers\Api\DeviceTokenController::class, 'getDevices']);
+
+    // Notification Settings
+    Route::get('/notifications/settings', [App\Http\Controllers\Api\DeviceTokenController::class, 'getSettings']);
+    Route::post('/notifications/settings', [App\Http\Controllers\Api\DeviceTokenController::class, 'updateSettings']);
+
+    // User Notifications
+    Route::get('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    Route::delete('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'destroyAll']);
+});
+
+// Admin routes for sending notifications (should be protected by admin middleware)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/notifications/send', [App\Http\Controllers\Api\NotificationController::class, 'send']);
+    Route::post('/notifications/send-bulk', [App\Http\Controllers\Api\NotificationController::class, 'sendBulk']);
+    Route::post('/notifications/send-topic', [App\Http\Controllers\Api\NotificationController::class, 'sendToTopic']);
+    Route::post('/notifications/test-token', [App\Http\Controllers\Api\NotificationController::class, 'testToken']);
+    Route::post('/notifications/validate-token', [App\Http\Controllers\Api\NotificationController::class, 'validateToken']);
 });
 
 Route::post('/forget-password', [UserAuthController::class, 'forgetPassword'])
