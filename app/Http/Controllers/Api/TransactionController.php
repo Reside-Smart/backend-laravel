@@ -100,7 +100,7 @@ class TransactionController extends Controller
     {
         $userId = Auth::id();
 
-        $transactions = Transaction::with(['listing.rentalOptions', 'rentalOption'])
+        $transactions = Transaction::with(['listing', 'rentalOption', 'listingDiscount', 'listing.user', 'listing.rentalOptions', 'listing.discounts'])
             ->where('buyer_id', $userId)
             ->orWhere('seller_id', $userId)
             ->get();
