@@ -34,9 +34,7 @@ class NotificationController extends Controller
         }
 
         // Get all notifications with pagination
-        $notifications = $query->orderBy('created_at', 'desc')->paginate(
-            $request->input('per_page', 20)
-        );
+        $notifications = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'notifications' => $notifications,

@@ -96,7 +96,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Route notifications for the Firebase Cloud Messaging channel.
+     * Route notifications for the FCM channel.
      *
      * @param  \Illuminate\Notifications\Notification  $notification
      * @return array

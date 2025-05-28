@@ -40,16 +40,23 @@ class DeviceTokenController extends Controller
         }
 
         // First try to update existing token if it exists
-        $deviceToken = DeviceToken::updateOrCreate(
-            [
+        $deviceToken = DeviceToken::where('user_id', $user->id)
+            ->first();
+
+        if ($deviceToken) {
+            $deviceToken->update([
                 'token' => $request->token,
-            ],
-            [
-                'user_id' => $user->id,
                 'device_type' => $request->device_type,
                 'device_name' => $request->device_name,
-            ]
-        );
+            ]);
+        } else {
+            $deviceToken = DeviceToken::create([
+                'user_id' => $user->id,
+                'token' => $request->token,
+                'device_type' => $request->device_type,
+                'device_name' => $request->device_name,
+            ]);
+        }
 
         // Make sure user has notification settings
         $settings = UserNotificationSetting::firstOrCreate(

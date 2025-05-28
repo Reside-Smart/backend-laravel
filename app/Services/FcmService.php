@@ -238,21 +238,6 @@ class FcmService
 
         try {
             $result = $this->messaging->subscribeToTopic($topic, $tokens);
-            $failures = $result->errors()->count();
-
-            if ($failures > 0) {
-                $failedTokens = [];
-                foreach ($result->errors() as $error) {
-                    $failedTokens[] = $tokens[$error->index()];
-                    Log::warning("Failed to subscribe token to topic: {$error->error()}");
-                }
-
-                return [
-                    'success' => $failures < count($tokens),
-                    'message' => "{$failures} token(s) failed to subscribe to topic",
-                    'failed_tokens' => $failedTokens
-                ];
-            }
 
             return [
                 'success' => true,
@@ -288,21 +273,6 @@ class FcmService
 
         try {
             $result = $this->messaging->unsubscribeFromTopic($topic, $tokens);
-            $failures = $result->errors()->count();
-
-            if ($failures > 0) {
-                $failedTokens = [];
-                foreach ($result->errors() as $error) {
-                    $failedTokens[] = $tokens[$error->index()];
-                    Log::warning("Failed to unsubscribe token from topic: {$error->error()}");
-                }
-
-                return [
-                    'success' => $failures < count($tokens),
-                    'message' => "{$failures} token(s) failed to unsubscribe from topic",
-                    'failed_tokens' => $failedTokens
-                ];
-            }
 
             return [
                 'success' => true,
@@ -452,8 +422,7 @@ class FcmService
         if ($report->hasFailures()) {
             $invalidTokens = [];
 
-            foreach ($report->failures()->getItems() as $failure) {
-                $index = $failure->index();
+            foreach ($report->failures()->getItems() as $index => $failure) {
                 $error = $failure->error();
 
                 // Check if the error indicates an invalid token

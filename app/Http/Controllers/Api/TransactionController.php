@@ -67,6 +67,10 @@ class TransactionController extends Controller
 
         $transaction = Transaction::create($validated);
 
+        // Dispatch event for notifications
+        $transaction->load(['listing']);
+        event(new \App\Events\TransactionCreated($transaction));
+
         return response()->json([
             'message' => 'Transaction created successfully',
             'transaction' => $transaction

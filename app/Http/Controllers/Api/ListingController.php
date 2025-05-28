@@ -270,6 +270,9 @@ class ListingController extends Controller
             }
         }
 
+        // dispatch event to send notification
+        event(new \App\Events\ListingCreated($listing));
+
         return response()->json([
             'message' => 'Listing created successfully',
             'listing' => $listing
@@ -417,6 +420,9 @@ class ListingController extends Controller
             'is_available' => $request->is_available ?? $listing->is_available,
             'category_id' => $request->category_id ?? $listing->category_id,
         ]);
+
+        // dispatch event to send notification
+        event(new \App\Events\ListingCreated($listing));
 
         return response()->json([
             'message' => 'Listing updated successfully',

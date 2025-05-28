@@ -49,35 +49,16 @@ class AppNotification extends Notification implements ShouldQueue
 
     /**
      * Get the firebase cloud messaging representation of the notification.
+     * This should only return the DATA, not send the notification
      */
     public function toFcm($notifiable)
     {
-        $fcmService = app(FcmService::class);
-        $tokens = $notifiable->routeNotificationForFcm($this);
-
-        if (empty($tokens)) {
-            return null;
-        }
-
-        // For a single token
-        if (count($tokens) === 1) {
-            return $fcmService->sendToDevice(
-                $tokens[0],
-                $this->title,
-                $this->body,
-                $this->data,
-                $this->image
-            );
-        }
-
-        // For multiple tokens
-        return $fcmService->sendToMultipleDevices(
-            $tokens,
-            $this->title,
-            $this->body,
-            $this->data,
-            $this->image
-        );
+        return [
+            'title' => $this->title,
+            'body' => $this->body,
+            'data' => $this->data,
+            'image' => $this->image
+        ];
     }
 
     /**
@@ -88,7 +69,6 @@ class AppNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'id' => $this->id,
             'title' => $this->title,
             'body' => $this->body,
             'type' => $this->type,

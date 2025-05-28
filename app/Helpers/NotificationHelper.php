@@ -151,4 +151,21 @@ class NotificationHelper
         // Otherwise, we might need more specific targeting
         return false;
     }
+
+    /**
+     * Check if a user should receive a notification of a specific type
+     */
+    public static function shouldSendNotification(User $user, string $type): bool
+    {
+        // If user has no notification settings, default to sending notifications
+        Log::info("Checking notification preference for user ID: {$user->id}, type: {$type}");
+        if (!$user->notificationSettings) {
+            return true;
+        }
+
+        Log::info("User notification settings: " . json_encode($user->notificationSettings));
+        Log::info("User preference for {$type} notifications: " . ($user->notificationSettings[$type] ? 'enabled' : 'disabled'));
+        // Return the user's preference for this notification type
+        return (bool) $user->notificationSettings[$type];
+    }
 }
