@@ -669,21 +669,21 @@ class DashboardController extends Controller
 
         // Transactions with discounts vs without
         $transactionsWithDiscount = Transaction::whereIn('listing_id', $listingIds)
-            ->whereNotNull('listing_discount_id')
+            ->whereNotNull('discount_id')
             ->count();
 
         $transactionsWithoutDiscount = Transaction::whereIn('listing_id', $listingIds)
-            ->whereNull('listing_discount_id')
+            ->whereNull('discount_id')
             ->count();
 
         // Revenue comparison
         $revenueWithDiscount = Transaction::whereIn('listing_id', $listingIds)
-            ->whereNotNull('listing_discount_id')
+            ->whereNotNull('discount_id')
             ->where('payment_status', 'paid')
             ->sum('amount_paid');
 
         $revenueWithoutDiscount = Transaction::whereIn('listing_id', $listingIds)
-            ->whereNull('listing_discount_id')
+            ->whereNull('discount_id')
             ->where('payment_status', 'paid')
             ->sum('amount_paid');
 
