@@ -13,7 +13,7 @@ class ListListingDiscounts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // No create action for read-only
         ];
     }
 }

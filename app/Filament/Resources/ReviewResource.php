@@ -12,48 +12,42 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ReviewResource extends Resource
 {
     protected static ?string $model = Review::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
+    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
+    protected static ?string $navigationGroup = 'User Management';
+    protected static ?int $navigationSort = 3;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('rating')
-                    ->placeholder('Enter rating')
-                    ->numeric()
-                    ->minValue(1)
-                    ->maxValue(5)
-                    ->label('Rating (1-5)')
-                    ->required(),
                 Forms\Components\TextInput::make('text')
-                    ->placeholder('Enter review text')
-                    ->maxLength(255)
                     ->label('Review Text')
-                    ->required(), Forms\Components\Select::make('user_id')
-                    ->searchable()
+                    ->disabled()
+                    ->columnSpan(2),
+                Forms\Components\Select::make('user_id')
+                    ->relationship('user', 'name')
                     ->label('Review Owner')
-                    ->options(
-                        User::all()
-                            ->pluck('name', 'id')
-                            ->toArray()
-                    )
-                    ->required(),
+                    ->disabled()
+                    ->columnSpan(1),
                 Forms\Components\Select::make('listing_id')
-                    ->searchable()
-                    ->label('Listing')
-                    ->options(
-                        Listing::all()
-                            ->pluck('name', 'id')
-                            ->toArray()
-                    )
-                    ->required(),
+                    ->relationship('listing', 'name')
+                    ->label('Property')
+                    ->disabled()
+                    ->columnSpan(1),
+                Forms\Components\DateTimePicker::make('created_at')
+                    ->label('Created At')
+                    ->disabled()
+                    ->columnSpan(1),
             ]);
     }
 
@@ -61,42 +55,41 @@ class ReviewResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('rating')
-                    ->badge(),
-                Tables\Columns\TextColumn::make('text'),
+                Tables\Columns\TextColumn::make('text')
+                    ->limit(50)
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->searchable()
-                    ->label('Review Owner'),
+                    ->sortable()
+                    ->label('Reviewer'),
                 Tables\Columns\TextColumn::make('listing.name')
                     ->searchable()
-                    ->label('Listing')
+                    ->sortable()
+                    ->label('Property'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('M d, Y H:i')
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('listing_id')
-                    ->options(
-                        Listing::all()
-                            ->pluck('name', 'id')
-                            ->toArray()
-                    )->label('Listing'),
+                    ->relationship('listing', 'name')
+                    ->label('Property'),
                 Tables\Filters\SelectFilter::make('user_id')
-                    ->options(
-                        User::all()
-                            ->pluck('name', 'id')
-                            ->toArray()
-                    )->label('User'),
-                // ])
-                // ->actions([])
-                // ->bulkActions([
-                //     Tables\Actions\BulkActionGroup::make([
-                //         Tables\Actions\DeleteBulkAction::make(),
-                //     ]),
+                    ->relationship('user', 'name')
+                    ->label('Reviewer'),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+            ])
+            ->bulkActions([
+                // No bulk actions for read-only
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            // No relations needed
         ];
     }
 
@@ -104,8 +97,7 @@ class ReviewResource extends Resource
     {
         return [
             'index' => Pages\ListReviews::route('/'),
-            // 'create' => Pages\CreateReview::route('/create'),
-            // 'edit' => Pages\EditReview::route('/{record}/edit'),
+            'view' => Pages\ViewReview::route('/{record}'),
         ];
     }
 }
