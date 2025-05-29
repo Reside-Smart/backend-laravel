@@ -89,4 +89,31 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return $this->hasMany(Listing::class);
     }
+
+    /**
+     * Get the device tokens for the user.
+     */
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    /**
+     * Get the notification settings for the user.
+     */
+    public function notificationSettings()
+    {
+        return $this->hasOne(UserNotificationSetting::class);
+    }
+
+    /**
+     * Route notifications for the FCM channel.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return array
+     */
+    public function routeNotificationForFcm($notification)
+    {
+        return $this->deviceTokens()->pluck('token')->toArray();
+    }
 }

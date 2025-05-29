@@ -67,6 +67,10 @@ class TransactionController extends Controller
 
         $transaction = Transaction::create($validated);
 
+        // Dispatch event for notifications
+        $transaction->load(['listing']);
+        event(new \App\Events\TransactionCreated($transaction));
+
         return response()->json([
             'message' => 'Transaction created successfully',
             'transaction' => $transaction
@@ -100,7 +104,7 @@ class TransactionController extends Controller
     {
         $userId = Auth::id();
 
-        $transactions = Transaction::with(['listing.rentalOptions', 'rentalOption'])
+        $transactions = Transaction::with(['listing', 'rentalOption', 'listingDiscount', 'listing.user', 'listing.rentalOptions', 'listing.discounts'])
             ->where('buyer_id', $userId)
             ->orWhere('seller_id', $userId)
             ->get();
